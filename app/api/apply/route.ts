@@ -15,6 +15,12 @@ function truncate(text: string, max = 750) {
   return text.length > max ? text.slice(0, max - 3) + "..." : text;
 }
 
+function looksEnglishOnly(text: string) {
+  const letters = text.match(/[A-Za-z]/g)?.length || 0;
+  const nonEnglishLetters = text.match(/[^\x00-\x7F]/g)?.length || 0;
+  return letters >= 20 && nonEnglishLetters === 0;
+}
+
 async function redisCommand(command: unknown[]) {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     return null;
@@ -38,22 +44,18 @@ async function sendDiscord(webhook: string | undefined, payload: unknown) {
     return;
   }
 
-  try {
-    const res = await fetch(webhook, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+  const res = await fetch(webhook, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
 
-    const text = await res.text();
+  const text = await res.text();
 
-    if (!res.ok) {
-      console.error("❌ Discord webhook failed:", res.status, text);
-    } else {
-      console.log("✅ Discord webhook sent");
-    }
-  } catch (err) {
-    console.error("❌ Webhook crash:", err);
+  if (!res.ok) {
+    console.error("❌ Discord webhook failed:", res.status, text);
+  } else {
+    console.log("✅ Discord webhook sent");
   }
 }
 
@@ -64,7 +66,7 @@ export async function POST(req: Request) {
 
     if (!username || !discord || !questions || !answers) {
       return Response.json(
-        { decision: "declined", reason: "Missing application data." },
+        { decision: "declined", message: "Application declined... please try again in 7 days." },
         { status: 400 }
       );
     }
@@ -77,7 +79,7 @@ export async function POST(req: Request) {
     if (existingLock?.result) {
       return Response.json({
         decision: "declined",
-        reason: "Application declined... please try again in 7 days.",
+        message: "Application declined... please try again in 7 days.",
         cooldown: true,
       });
     }
@@ -85,6 +87,43 @@ export async function POST(req: Request) {
     const qaText = questions
       .map((q: string, i: number) => `Q${i + 1}: ${q}\nA: ${answers[i] || "No answer"}`)
       .join("\n\n");
+
+    if (!looksEnglishOnly(qaText)) {
+      await redisCommand([
+        "SET",
+        lockKey,
+        JSON.stringify({
+          discord,
+          username,
+          declinedAt: new Date().toISOString(),
+          reason: "Application must be written in English.",
+        }),
+        "EX",
+        SEVEN_DAYS,
+      ]);
+
+      await sendDiscord(process.env.DISCORD_DECLINED_WEBHOOK_URL, {
+        embeds: [
+          {
+            title: "❌ Declined Staff Application",
+            color: 0xff5555,
+            fields: [
+              { name: "Minecraft Username", value: truncate(username), inline: true },
+              { name: "Discord Username", value: truncate(discord), inline: true },
+              { name: "Decision", value: "Declined", inline: true },
+              { name: "Score", value: "0%", inline: true },
+              { name: "Reason", value: "Application must be written in English." },
+              { name: "Questions & Answers", value: truncate(qaText) },
+            ],
+          },
+        ],
+      });
+
+      return Response.json({
+        decision: "declined",
+        message: "Application declined... please try again in 7 days.",
+      });
+    }
 
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
@@ -153,10 +192,10 @@ ${qaText}
     const approved = result.decision === "approved";
 
     const fields = [
-      { name: "Minecraft", value: truncate(username), inline: true },
-      { name: "Discord", value: truncate(discord), inline: true },
+      { name: "Minecraft Username", value: truncate(username), inline: true },
+      { name: "Discord Username", value: truncate(discord), inline: true },
       { name: "Decision", value: approved ? "Approved for Review" : "Declined", inline: true },
-      { name: "Score", value: String(result.score ?? "N/A"), inline: true },
+      { name: "Score", value: `${result.score ?? 0}%`, inline: true },
       { name: "Reason", value: truncate(result.reason) },
       { name: "Strengths", value: truncate((result.strengths || []).join("\n") || "N/A") },
       { name: "Concerns", value: truncate((result.concerns || []).join("\n") || "N/A") },
@@ -176,8 +215,7 @@ ${qaText}
 
       return Response.json({
         decision: "approved",
-        message:
-          "Application Approved... Your application has been sent over to moderators for further review.",
+        message: "Application Approved... Your application has been sent over to moderators for further review.",
       });
     }
 
@@ -194,9 +232,6 @@ ${qaText}
       SEVEN_DAYS,
     ]);
 
-    console.log("🔥 DECLINED PATH HIT");
-    console.log("Webhook URL:", process.env.DISCORD_DECLINED_WEBHOOK_URL);
-    
     await sendDiscord(process.env.DISCORD_DECLINED_WEBHOOK_URL, {
       embeds: [
         {
@@ -212,12 +247,12 @@ ${qaText}
       message: "Application declined... please try again in 7 days.",
     });
   } catch (error) {
-    console.error(error);
+    console.error("APPLICATION API ERROR:", error);
 
     return Response.json(
       {
         decision: "declined",
-        message: "Application declined... please try again in 7 days.",
+        message: "Application system error. Please try again later.",
       },
       { status: 500 }
     );
