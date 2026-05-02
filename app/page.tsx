@@ -33,16 +33,22 @@ export default function Page() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      minecraftUsername: mc,
-      discordUsername: discord,
-      questions,
-      answers,
+      username: mc,
+      discord: discord,
+      messages: [
+        {
+          role: "user",
+          content: questions
+            .map((q, i) => `${q}\nAnswer: ${answers[i]}`)
+            .join("\n\n"),
+        },
+      ],
     }),
   });
 
   const data = await res.json();
 
-  setApproved(data.decision === "approved");
+  setApproved(data.decision === "accept");
 
   setResultMessage(
     data.decision === "approved"
