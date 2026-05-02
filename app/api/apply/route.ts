@@ -10,7 +10,7 @@ function normalizeDiscord(discord: string) {
   return discord.trim().toLowerCase().replace(/\s+/g, "");
 }
 
-function truncate(text: string, max = 950) {
+function truncate(text: string, max = 750) {
   if (!text) return "N/A";
   return text.length > max ? text.slice(0, max - 3) + "..." : text;
 }
@@ -33,13 +33,28 @@ async function redisCommand(command: unknown[]) {
 }
 
 async function sendDiscord(webhook: string | undefined, payload: unknown) {
-  if (!webhook) return;
+  if (!webhook) {
+    console.log("❌ No webhook provided");
+    return;
+  }
 
-  await fetch(webhook, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const res = await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const text = await res.text();
+
+    if (!res.ok) {
+      console.error("❌ Discord webhook failed:", res.status, text);
+    } else {
+      console.log("✅ Discord webhook sent");
+    }
+  } catch (err) {
+    console.error("❌ Webhook crash:", err);
+  }
 }
 
 export async function POST(req: Request) {
