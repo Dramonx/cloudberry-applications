@@ -25,8 +25,10 @@ export default function Page() {
 
   const progress = useMemo(() => {
     if (done) return 100;
-    return Math.round((step / questions.length) * 100);
-  }, [step, done]);
+    if (step < 0) return 0; // 👈 fix negative
+
+  return Math.round(((step + 1) / questions.length) * 100);
+}, [step, done]);
 
   useEffect(() => {
     if (!loading) return;
