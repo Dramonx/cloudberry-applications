@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const questions = [
   "Why do you want to become an Intern Helper on CloudBerry?",
@@ -8,6 +8,7 @@ const questions = [
   "You are having a bad day and a member keeps bothering you. How do you avoid lashing out?",
   "Your friend breaks a rule and asks you to ignore it. What do you do?",
   "A player accuses another staff member of abuse, but you did not see it happen. What steps do you take?",
+  "What is your ability like to work with a team?",
   "During your 7-day trial, what will you do to prove you deserve Helper?"
 ];
 
@@ -18,6 +19,7 @@ export default function Page() {
   const [answers, setAnswers] = useState(Array(questions.length).fill(""));
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState("AI Screening...");
   const [resultMessage, setResultMessage] = useState("");
   const [approved, setApproved] = useState(false);
 
@@ -26,47 +28,62 @@ export default function Page() {
     return Math.round((step / questions.length) * 100);
   }, [step, done]);
 
+  useEffect(() => {
+    if (!loading) return;
+
+    const words = ["AI Screening...", "Please Wait...", "Processing..."];
+    let index = 0;
+
+    const interval = setInterval(() => {
+      index = (index + 1) % words.length;
+      setLoadingText(words[index]);
+    }, 900);
+
+    return () => clearInterval(interval);
+  }, [loading]);
+
   async function submitApplication() {
-  setLoading(true);
+    setLoading(true);
 
-  const res = await fetch("/api/apply", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: mc,
-      discord: discord,
-      messages: [
-        {
-          role: "user",
-          content: questions
-            .map((q, i) => `${q}\nAnswer: ${answers[i]}`)
-            .join("\n\n"),
-        },
-      ],
-    }),
-  });
+    try {
+      const res = await fetch("/api/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: mc,
+          discord,
+          questions,
+          answers,
+        }),
+      });
 
-  const data = await res.json();
+      const data = await res.json();
 
-  setApproved(data.decision === "accept");
+      setApproved(data.decision === "approved");
 
-  setResultMessage(
-    data.decision === "approved"
-      ? "Application Approved... Your application has been sent over to moderators for further review."
-      : "Application declined... please try again in 7 days."
-  );
+      setResultMessage(
+        data.message ||
+          (data.decision === "approved"
+            ? "Application Approved... Your application has been sent over to moderators for further review."
+            : "Application declined... please try again in 7 days.")
+      );
+    } catch {
+      setApproved(false);
+      setResultMessage("Application declined... please try again in 7 days.");
+    }
 
-  setLoading(false);
-  setDone(true);
-}
+    setLoading(false);
+    setDone(true);
+  }
 
-function next() {
-  if (step === 0 && (!mc.trim() || !discord.trim())) return;
-  if (step > 0 && !answers[step].trim()) return;
+  function next() {
+    if (loading) return;
+    if (step === 0 && (!mc.trim() || !discord.trim())) return;
+    if (step > 0 && !answers[step].trim()) return;
 
-  if (step < questions.length - 1) setStep(step + 1);
-  else submitApplication();
-}
+    if (step < questions.length - 1) setStep(step + 1);
+    else submitApplication();
+  }
 
   return (
     <main>
@@ -96,7 +113,7 @@ function next() {
           </h1>
 
           <p className="subtitle">
-            Apply for <b>Intern Helper</b>, a 7-day trial staff role. CloudBerry AI evaluates patience, maturity, fairness, stress control, and true intent before sending candidates to staff review.
+            Apply for <b>Intern Helper</b>, a 7-day trial staff role. CloudBerry AI evaluates patience, maturity, fairness, stress control, teamwork, and true intent before sending candidates to staff review.
           </p>
 
           <div className="stats">
@@ -112,7 +129,7 @@ function next() {
             <div className="panel-top">
               <div>
                 <p className="eyebrow">CLOUDBERRY STAFF TERMINAL</p>
-                <h2>{done ? "Application Submitted" : step === 0 ? "Player Identity" : `Question ${step}/${questions.length - 1}`}</h2>
+                <h2>{done ? "Application Result" : step === 0 ? "Player Identity" : `Question ${step}/${questions.length - 1}`}</h2>
               </div>
               <div className="percent">{progress}%</div>
             </div>
@@ -125,11 +142,11 @@ function next() {
                   <>
                     <label>
                       <span>Minecraft Username</span>
-                      <input value={mc} onChange={(e) => setMc(e.target.value)} placeholder="CloudPlayer123" />
+                      <input value={mc} onChange={(e) => setMc(e.target.value)} placeholder="CloudPlayer123" disabled={loading} />
                     </label>
                     <label>
                       <span>Discord Username</span>
-                      <input value={discord} onChange={(e) => setDiscord(e.target.value)} placeholder="username or user#0001" />
+                      <input value={discord} onChange={(e) => setDiscord(e.target.value)} placeholder="username or user#0001" disabled={loading} />
                     </label>
                     <div className="notice">Your answers are checked by CloudBerry AI first. Strong candidates are forwarded to admins. Low-effort or unsafe applications are declined.</div>
                   </>
@@ -141,6 +158,7 @@ function next() {
                     </div>
                     <textarea
                       value={answers[step]}
+                      disabled={loading}
                       onChange={(e) => {
                         const nextAnswers = [...answers];
                         nextAnswers[step] = e.target.value;
@@ -153,7 +171,7 @@ function next() {
 
                 <button onClick={next} disabled={loading}>
                   {loading
-                    ? "AI Screening..."
+                    ? loadingText
                     : step === questions.length - 1
                     ? "Submit to AI Screening"
                     : step === 0
@@ -222,6 +240,7 @@ function next() {
         textarea { min-height: 170px; resize: vertical; line-height: 1.6; }
         input:focus, textarea:focus { border-color: rgba(251,191,36,.7); box-shadow: 0 0 0 4px rgba(251,191,36,.12), 0 0 34px rgba(56,189,248,.16); }
         input::placeholder, textarea::placeholder { color: #94a3b8; }
+        input:disabled, textarea:disabled, button:disabled { opacity: .75; cursor: not-allowed; }
         .notice { padding: 14px 16px; border-radius: 8px; background: rgba(251,146,60,.13); border: 2px solid rgba(251,146,60,.25); color: #fed7aa; line-height: 1.55; }
         .question-card { padding: 18px; border-radius: 12px; background: rgba(255,255,255,.07); border: 2px solid rgba(255,255,255,.12); }
         .chip { display: inline-flex; margin-bottom: 12px; padding: 7px 10px; border-radius: 4px; color: #082f49; background: #7dd3fc; font-size: 11px; font-weight: 1000; letter-spacing: .1em; text-transform: uppercase; }
