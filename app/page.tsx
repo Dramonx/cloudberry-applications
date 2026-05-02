@@ -19,6 +19,8 @@ export default function Page() {
   const [done, setDone] = useState(false);
 
   const next = () => {
+    if (step === 0 && (!mc || !discord)) return;
+
     if (step < questions.length - 1) {
       setStep(step + 1);
     } else {
@@ -27,57 +29,77 @@ export default function Page() {
   };
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(#87CEEB, #ffffff)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      fontFamily: "sans-serif"
-    }}>
-      <div style={{
-        background: "white",
-        padding: "30px",
-        borderRadius: "20px",
-        width: "500px",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.1)"
-      }}>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-300 via-white to-orange-200 p-6">
+      <div className="w-full max-w-xl bg-white rounded-3xl shadow-2xl p-8">
 
         {!done ? (
           <>
-            <h2>☁️ CloudBerry Staff Application</h2>
+            <h1 className="text-3xl font-black mb-2 text-sky-600">
+              ☁️ CloudBerry Staff App
+            </h1>
+            <p className="text-gray-500 mb-6">
+              Intern Helper (7-day trial)
+            </p>
+
+            <div className="mb-6">
+              <div className="h-2 w-full bg-gray-200 rounded-full">
+                <div
+                  className="h-2 bg-gradient-to-r from-sky-400 to-orange-400 rounded-full"
+                  style={{ width: `${(step / questions.length) * 100}%` }}
+                />
+              </div>
+            </div>
 
             {step === 0 && (
-              <>
-                <input placeholder="Minecraft Username" value={mc} onChange={e => setMc(e.target.value)} style={{ width: "100%", marginBottom: "10px" }} />
-                <input placeholder="Discord Username" value={discord} onChange={e => setDiscord(e.target.value)} style={{ width: "100%" }} />
-              </>
+              <div className="space-y-4">
+                <input
+                  className="w-full p-3 rounded-xl border"
+                  placeholder="Minecraft Username"
+                  value={mc}
+                  onChange={(e) => setMc(e.target.value)}
+                />
+                <input
+                  className="w-full p-3 rounded-xl border"
+                  placeholder="Discord Username"
+                  value={discord}
+                  onChange={(e) => setDiscord(e.target.value)}
+                />
+              </div>
             )}
 
             {step > 0 && (
-              <>
-                <p>{questions[step]}</p>
+              <div className="space-y-4">
+                <p className="font-semibold text-lg">
+                  {questions[step]}
+                </p>
                 <textarea
+                  className="w-full p-3 rounded-xl border h-32"
                   value={answers[step]}
-                  onChange={e => {
+                  onChange={(e) => {
                     const a = [...answers];
                     a[step] = e.target.value;
                     setAnswers(a);
                   }}
-                  style={{ width: "100%", height: "100px" }}
                 />
-              </>
+              </div>
             )}
 
-            <button onClick={next} style={{ marginTop: "15px" }}>
-              Next
+            <button
+              onClick={next}
+              className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-sky-400 to-orange-400 text-white font-bold hover:scale-[1.02] transition"
+            >
+              {step === questions.length - 1 ? "Submit" : "Next"}
             </button>
           </>
         ) : (
-          <>
-            <h2>✅ Application Submitted</h2>
-            <p>Staff will review your application if you pass AI screening.</p>
-          </>
+          <div className="text-center">
+            <h1 className="text-3xl font-black text-green-600 mb-3">
+              ✅ Application Submitted
+            </h1>
+            <p className="text-gray-600">
+              If you pass AI screening, staff will review your application.
+            </p>
+          </div>
         )}
 
       </div>
