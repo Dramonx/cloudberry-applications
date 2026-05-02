@@ -194,6 +194,9 @@ ${qaText}
       SEVEN_DAYS,
     ]);
 
+    console.log("🔥 DECLINED PATH HIT");
+    console.log("Webhook URL:", process.env.DISCORD_DECLINED_WEBHOOK_URL);
+    
     await sendDiscord(process.env.DISCORD_DECLINED_WEBHOOK_URL, {
       embeds: [
         {
