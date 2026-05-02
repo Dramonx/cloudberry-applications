@@ -158,9 +158,9 @@ function next() {
               </div>
             ) : (
               <div className="success">
-                <div className="check">✓</div>
-                <h3>Submission received.</h3>
-                <p>Your application is queued for CloudBerry AI screening. If approved, it will be sent to the Potential Candidates staff channel for review.</p>
+                <div className="check">{approved ? "✓" : "!"}</div>
+                <h3>{approved ? "Application Approved" : "Application Declined"}</h3>
+                <p>{resultMessage}</p>
               </div>
             )}
           </div>
