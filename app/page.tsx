@@ -17,19 +17,50 @@ export default function Page() {
   const [discord, setDiscord] = useState("");
   const [answers, setAnswers] = useState(Array(questions.length).fill(""));
   const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
+  const [approved, setApproved] = useState(false);
 
   const progress = useMemo(() => {
     if (done) return 100;
     return Math.round((step / questions.length) * 100);
   }, [step, done]);
 
-  function next() {
-    if (step === 0 && (!mc.trim() || !discord.trim())) return;
-    if (step > 0 && !answers[step].trim()) return;
+  async function submitApplication() {
+  setLoading(true);
 
-    if (step < questions.length - 1) setStep(step + 1);
-    else setDone(true);
-  }
+  const res = await fetch("/api/apply", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      minecraftUsername: mc,
+      discordUsername: discord,
+      questions,
+      answers,
+    }),
+  });
+
+  const data = await res.json();
+
+  setApproved(data.decision === "approved");
+
+  setResultMessage(
+    data.decision === "approved"
+      ? "Application Approved... Your application has been sent over to moderators for further review."
+      : "Application declined... please try again in 7 days."
+  );
+
+  setLoading(false);
+  setDone(true);
+}
+
+function next() {
+  if (step === 0 && (!mc.trim() || !discord.trim())) return;
+  if (step > 0 && !answers[step].trim()) return;
+
+  if (step < questions.length - 1) setStep(step + 1);
+  else submitApplication();
+}
 
   return (
     <main>
@@ -114,8 +145,14 @@ export default function Page() {
                   </>
                 )}
 
-                <button onClick={next}>
-                  {step === questions.length - 1 ? "Submit to AI Screening" : step === 0 ? "Begin Interview" : "Continue"}
+                <button onClick={next} disabled={loading}>
+                  {loading
+                    ? "AI Screening..."
+                    : step === questions.length - 1
+                    ? "Submit to AI Screening"
+                    : step === 0
+                    ? "Begin Interview"
+                    : "Continue"}
                   <span>→</span>
                 </button>
               </div>
