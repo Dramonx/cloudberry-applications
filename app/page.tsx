@@ -13,7 +13,7 @@ const questions = [
 ];
 
 export default function Page() {
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(-1);
   const [mc, setMc] = useState("");
   const [discord, setDiscord] = useState("");
   const [answers, setAnswers] = useState(Array(questions.length).fill(""));
@@ -78,8 +78,8 @@ export default function Page() {
 
   function next() {
     if (loading) return;
-    if (step === 0 && (!mc.trim() || !discord.trim())) return;
-    if (step > 0 && !answers[step].trim()) return;
+    if (step === -1 && (!mc.trim() || !discord.trim())) return;
+    if (step >= 0 && !answers[step].trim()) return;
 
     if (step < questions.length - 1) setStep(step + 1);
     else submitApplication();
@@ -129,7 +129,7 @@ export default function Page() {
             <div className="panel-top">
               <div>
                 <p className="eyebrow">CLOUDBERRY STAFF TERMINAL</p>
-                <h2>{done ? "Application Result" : step === 0 ? "Player Identity" : `Question ${step}/${questions.length - 1}`}</h2>
+                <h2>{done ? "Application Result" : step === -1 ? "Player Identity" : `Question ${step + 1}/${questions.length}`}</h2>
               </div>
               <div className="percent">{progress}%</div>
             </div>
@@ -138,7 +138,7 @@ export default function Page() {
 
             {!done ? (
               <div className="content">
-                {step === 0 ? (
+                {step === -1 ? (
                   <>
                     <label>
                       <span>Minecraft Username</span>
@@ -174,7 +174,7 @@ export default function Page() {
                     ? loadingText
                     : step === questions.length - 1
                     ? "Submit to AI Screening"
-                    : step === 0
+                    : step === -1
                     ? "Begin Interview"
                     : "Continue"}
                   <span>→</span>
