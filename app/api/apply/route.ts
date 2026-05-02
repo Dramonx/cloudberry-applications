@@ -42,7 +42,7 @@ Do NOT include anything outside JSON.
       ],
     });
 
-    const text = response.output[0].content[0].text;
+    const text = response.output_text;
 
     let result;
     try {
