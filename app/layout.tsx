@@ -1,3 +1,5 @@
+import Header from "./components/Header";
+
 export const metadata = {
   title: "CloudBerry Applications",
   description: "CloudBerry Staff Applications"
@@ -10,7 +12,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ margin: 0 }}>{children}</body>
+      <body style={{ margin: 0 }}>
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }
