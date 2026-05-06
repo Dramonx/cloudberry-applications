@@ -137,7 +137,7 @@ export default function HomePage() {
         .panel, .mode-card, .team-card { position: relative; border-radius: 16px; border: 3px solid rgba(255,255,255,.24); background: linear-gradient(180deg, rgba(12,32,55,.93), rgba(3,7,18,.94)); backdrop-filter: blur(24px); box-shadow: 0 32px 90px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.14), 0 10px 0 rgba(15,23,42,.42); overflow: hidden; }
         .panel { padding: 26px; }
         .lobby-card { position: relative; }
-        .lobby-placeholder { min-height: 360px; border-radius: 12px; border: 2px dashed rgba(125,211,252,.34); display: grid; place-items: center; text-align: center; padding: 28px; background: linear-gradient(135deg, rgba(14,165,233,.22), rgba(251,146,60,.16)); overflow: hidden; }
+        .lobby-placeholder { min-height: 225px; border-radius: 12px; border: 2px dashed rgba(125,211,252,.34); display: grid; place-items: center; text-align: center; padding: 28px; background: linear-gradient(135deg, rgba(14,165,233,.22), rgba(251,146,60,.16)); overflow: hidden; }
         .placeholder-grid { position: absolute; inset: 0; opacity: .32; background-size: 36px 36px; background-image: linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px); animation: particles 10s linear infinite; }
         .lobby-placeholder h2, .lobby-placeholder p { position: relative; }
         .lobby-placeholder h2 { font-size: 30px; margin: 0 0 8px; }
