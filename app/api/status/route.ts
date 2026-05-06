@@ -4,8 +4,9 @@ export async function GET() {
     const mcRes = await fetch("https://api.mcstatus.io/v2/status/java/mc-cloudberry.net");
     const mc = await mcRes.json();
 
-    // Discord widget (MAKE SURE widget is enabled)
-    const discordRes = await fetch("https://discord.com/api/guilds/1263235716750512199/widget.json");
+    // Discord total member count
+    const discordRes = await fetch("https://discord.com/api/guilds/1263235716750512199/preview");
+
     const discord = await discordRes.json();
 
     return Response.json({
