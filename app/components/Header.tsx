@@ -6,85 +6,57 @@ export default function Header() {
   const [players, setPlayers] = useState("...");
   const [max, setMax] = useState("...");
   const [discordCount, setDiscordCount] = useState("...");
+  const serverIp = "mc-cloudberry.net";
 
-useEffect(() => {
-  const load = () => {
-    fetch("/api/status")
-      .then((res) => res.json())
-      .then((data) => {
-        setPlayers(data.players ?? "0");
-        setMax(data.max ?? "0"); // 👈 add this
-        setDiscordCount(data.discord ?? "0"); // 👈 keep this
-      })
-      .catch(() => {
-        setPlayers("0");
-        setMax("0");
-        setDiscordCount("0");
-      });
-  };
+  useEffect(() => {
+    const load = () => {
+      fetch("/api/status")
+        .then((res) => res.json())
+        .then((data) => {
+          setPlayers(data.players ?? "0");
+          setMax(data.max ?? "0");
+          setDiscordCount(data.discord ?? "0");
+        })
+        .catch(() => {
+          setPlayers("0");
+          setMax("0");
+          setDiscordCount("0");
+        });
+    };
 
-  load(); // initial load
-
-  const interval = setInterval(load, 10000); // auto update every 10s
-
-  return () => clearInterval(interval);
-}, []);
+    load();
+    const interval = setInterval(load, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   async function copyIp() {
     await navigator.clipboard.writeText(serverIp);
     alert("Copied server IP!");
   }
 
+  const isOnline = Number(players) > 0;
+
   return (
     <header className="cb-header">
       <div className="cb-left">
-        <a className="cb-brand" href="/">
-          ☁️ CloudBerry
-        </a>
-
-        <a className="cb-link" href="/">
-          Home
-        </a>
-
-        <a className="cb-link" href="/apply">
-          Staff Applications
-        </a>
-
-        <a
-          className="cb-link"
-          href="https://shop.minecrafty.com"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a className="cb-brand" href="/">☁️ CloudBerry</a>
+        <a className="cb-link" href="/">Home</a>
+        <a className="cb-link" href="/apply">Staff Applications</a>
+        <a className="cb-link" href="https://shop.minecrafty.com" target="_blank" rel="noopener noreferrer">
           Store
         </a>
       </div>
 
-<div className="cb-right">
-  <button className="cb-pill" onClick={copyIp}>
-    🌐 {serverIp}{" "}
-    <span>
-      <span
-        className="status-dot"
-        style={{
-          background: Number(players) > 0 ? "#22c55e" : "#ef4444",
-          boxShadow:
-            Number(players) > 0
-              ? "0 0 8px #22c55e, 0 0 16px #22c55e"
-              : "0 0 8px #ef4444, 0 0 16px #ef4444",
-        }}
-      />
-      ({players}/{max} online)
-    </span>
-  </button>
-</div>
+      <div className="cb-right">
+        <button className="cb-pill" onClick={copyIp}>
+          🌐 {serverIp}{" "}
+          <span>
+            <span className={isOnline ? "status-dot online" : "status-dot offline"} />
+            ({players}/{max} online)
+          </span>
+        </button>
 
-        <a
-          className="cb-pill"
-          href="https://discord.gg/YOUR_INVITE"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a className="cb-pill" href="https://discord.gg/YOUR_INVITE" target="_blank" rel="noopener noreferrer">
           💬 Discord <span>({discordCount})</span>
         </a>
       </div>
@@ -134,9 +106,6 @@ useEffect(() => {
           font-size: 14px;
           cursor: pointer;
           transition: 0.2s ease;
-        }
-
-        .cb-pill {
           font-family: inherit;
         }
 
@@ -150,8 +119,34 @@ useEffect(() => {
           transform: translateY(-2px);
         }
 
-        .cb-pill span {
-          opacity: 0.85;
+        .status-dot {
+          display: inline-block;
+          width: 8px;
+          height: 8px;
+          margin-right: 6px;
+          border-radius: 50%;
+          animation: pulse-dot 1.5s infinite;
+        }
+
+        .status-dot.online {
+          background: #22c55e;
+          box-shadow: 0 0 8px #22c55e, 0 0 16px #22c55e;
+        }
+
+        .status-dot.offline {
+          background: #ef4444;
+          box-shadow: 0 0 8px #ef4444, 0 0 16px #ef4444;
+        }
+
+        @keyframes pulse-dot {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.4);
+            opacity: 0.6;
+          }
         }
 
         @media (max-width: 850px) {
