@@ -5,7 +5,7 @@ export async function GET() {
     const mc = await mcRes.json();
 
     // Discord widget (MAKE SURE widget is enabled)
-    const discordRes = await fetch("https://discord.com/api/guilds/YOUR_GUILD_ID/widget.json");
+    const discordRes = await fetch("https://discord.com/api/guilds/1263235716750512199/widget.json");
     const discord = await discordRes.json();
 
     return Response.json({
