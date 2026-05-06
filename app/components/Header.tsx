@@ -52,7 +52,7 @@ export default function Header() {
 
       <div className="cb-right">
         <button className="cb-pill" onClick={copyIp}>
-          🌐 {serverIp} <span>({players} online)</span>
+          🌐 {serverIp} <span>({players}/{max} online)</span>
         </button>
 
         <a
