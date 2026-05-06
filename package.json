@@ -8,7 +8,8 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "openai": "^4.0.0"
+    "openai": "^4.0.0",
+    "resend": "latest"
   },
   "devDependencies": {
     "typescript": "latest",
