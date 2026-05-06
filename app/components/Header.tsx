@@ -42,7 +42,7 @@ export default function Header() {
         <a className="cb-brand" href="/">☁️ CloudBerry</a>
         <a className="cb-link" href="/">Home</a>
         <a className="cb-link" href="/apply">Staff Applications</a>
-        <a className="cb-link" href="https://shop.minecrafty.com" target="_blank" rel="noopener noreferrer">
+        <a className="cb-link" href="https://shop.mc-cloudberry.com" target="_blank" rel="noopener noreferrer">
           Store
         </a>
       </div>
@@ -56,7 +56,7 @@ export default function Header() {
           </span>
         </button>
 
-        <a className="cb-pill" href="https://discord.gg/YOUR_INVITE" target="_blank" rel="noopener noreferrer">
+        <a className="cb-pill" href="https://discord.gg/cloudberry" target="_blank" rel="noopener noreferrer">
           💬 Discord <span>({discordCount})</span>
         </a>
       </div>
