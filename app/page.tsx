@@ -45,8 +45,7 @@ export default function HomePage() {
             <p className="eyebrow">LOBBY PREVIEW</p>
             <div className="lobby-placeholder">
               <div className="placeholder-grid" />
-              <h2>Lobby Screenshot Coming Soon</h2>
-              <p>Place your CloudBerry lobby image here once ready.</p>
+              <img src="/cloudberrylobby.png" alt="CloudBerry Lobby logo" />
             </div>
           </div>
         </div>
