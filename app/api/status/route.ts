@@ -11,7 +11,7 @@ export async function GET() {
     return Response.json({
       players: mc.players?.online ?? 0,
       max: mc.players?.max ?? 0,
-      discord: discord.presence_count ?? "N/A"
+      discord: discord.approximate_member_count ?? "N/A",
     });
 
   } catch (err) {
