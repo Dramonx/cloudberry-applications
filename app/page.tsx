@@ -121,7 +121,7 @@ export default function HomePage() {
         .particles { position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,.85) 1px, transparent 1.5px), radial-gradient(circle, rgba(251,191,36,.8) 1px, transparent 1.5px); background-size: 90px 90px, 140px 140px; animation: particles 14s linear infinite; opacity: .42; }
         .scanlines { pointer-events: none; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.05) 50%, transparent 100%); background-size: 100% 6px; opacity: .18; mix-blend-mode: overlay; }
         .hero-shell, .content-shell { position: relative; z-index: 2; width: min(1220px, 100%); margin: 0 auto; }
-        .hero-shell { display: grid; grid-template-columns: 1fr 520px; gap: 34px; align-items: center; min-height: 78vh; }
+        .hero-shell { display: grid; grid-template-columns: 1fr 650px; gap: 34px; align-items: center; min-height: 78vh; }
         .logo-stage { width: min(540px, 96%); margin-bottom: 18px; position: relative; animation: logoFloat 5s ease-in-out infinite; }
         .logo-stage:after { content: ""; position: absolute; inset: 10% 6% 0; background: rgba(251,146,60,.35); filter: blur(40px); z-index: -1; }
         .logo-stage img { width: 100%; display: block; filter: drop-shadow(0 26px 50px rgba(15,23,42,.38)); }
@@ -142,7 +142,7 @@ export default function HomePage() {
         .lobby-placeholder h2, .lobby-placeholder p { position: relative; }
         .lobby-placeholder h2 { font-size: 30px; margin: 0 0 8px; }
         .lobby-placeholder p { color: #cbd5e1; margin: 0; }
-        .lobby-placeholder img { width: 100%; height: 300px; object-fit: cover; border-radius: 16px; transition: transform 0.3s ease; }
+        .lobby-placeholder img { width: 100%; height: 375px; object-fit: cover; border-radius: 16px; transition: transform 0.3s ease; }
         .lobby-placeholder img:hover { transform: scale(1.03); }
         .content-shell { display: grid; gap: 24px; padding-bottom: 80px; }
         .about-panel { padding: 30px; }
