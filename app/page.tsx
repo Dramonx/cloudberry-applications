@@ -99,6 +99,23 @@ export default function HomePage() {
             </p>
           </div>
         </div>
+
+      <div className="team-card">
+        <div className="avatar-wrap">
+          <img src="https://mc-heads.net/body/Zxenist" alt="Zxenist Minecraft avatar" />
+        </div>
+      
+        <div>
+          <p className="eyebrow">STAFF TEAM</p>
+          <h2>Manager: Zxenist <span style={{ color: "#7dd3fc" }}>(Snow)</span></h2>
+          <p>
+            I’m Zxenist, a dedicated Manager at CloudBerry focused on keeping operations
+            running smoothly, supporting the team, and creating a positive community
+            experience. I work to solve problems efficiently, improve performance, and
+            ensure users receive high-quality service.
+          </p>
+        </div>
+      </div>
       </section>
 
       <style jsx global>{`
