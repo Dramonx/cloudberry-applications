@@ -4,21 +4,31 @@ import { useEffect, useState } from "react";
 
 export default function Header() {
   const [players, setPlayers] = useState("...");
+  const [max, setMax] = useState("...");
   const [discordCount, setDiscordCount] = useState("...");
-  const serverIp = "mc-cloudberry.net";
 
-  useEffect(() => {
+useEffect(() => {
+  const load = () => {
     fetch("/api/status")
       .then((res) => res.json())
       .then((data) => {
         setPlayers(data.players ?? "0");
-        setDiscordCount(data.discord ?? "0");
+        setMax(data.max ?? "0"); // 👈 add this
+        setDiscordCount(data.discord ?? "0"); // 👈 keep this
       })
       .catch(() => {
         setPlayers("0");
+        setMax("0");
         setDiscordCount("0");
       });
-  }, []);
+  };
+
+  load(); // initial load
+
+  const interval = setInterval(load, 10000); // auto update every 10s
+
+  return () => clearInterval(interval);
+}, []);
 
   async function copyIp() {
     await navigator.clipboard.writeText(serverIp);
@@ -50,10 +60,24 @@ export default function Header() {
         </a>
       </div>
 
-      <div className="cb-right">
-        <button className="cb-pill" onClick={copyIp}>
-          🌐 {serverIp} <span>({players}/{max} online)</span>
-        </button>
+<div className="cb-right">
+  <button className="cb-pill" onClick={copyIp}>
+    🌐 {serverIp}{" "}
+    <span>
+      <span
+        className="status-dot"
+        style={{
+          background: Number(players) > 0 ? "#22c55e" : "#ef4444",
+          boxShadow:
+            Number(players) > 0
+              ? "0 0 8px #22c55e, 0 0 16px #22c55e"
+              : "0 0 8px #ef4444, 0 0 16px #ef4444",
+        }}
+      />
+      ({players}/{max} online)
+    </span>
+  </button>
+</div>
 
         <a
           className="cb-pill"
