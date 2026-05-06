@@ -45,6 +45,9 @@ export default function Header() {
         <a className="cb-link" href="https://shop.mc-cloudberry.com" target="_blank" rel="noopener noreferrer">
           Store
         </a>
+        <a href="/contact" className="cb-link">
+          Contact
+        </a>
       </div>
 
       <div className="cb-right">
