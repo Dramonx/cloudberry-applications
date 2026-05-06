@@ -25,13 +25,32 @@ export default function ContactPage() {
 
   async function submitForm(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
-
-    // Later this can be connected to /api/contact for Discord/email delivery.
-    await new Promise((resolve) => setTimeout(resolve, 1800));
-
-    setLoading(false);
-    setSubmitted(true);
+  
+    try {
+      setLoading(true);
+  
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type,
+          ...form,
+        }),
+      });
+  
+      if (!res.ok) {
+        throw new Error("Failed to submit");
+      }
+  
+      setSubmitted(true);
+    } catch (err) {
+      alert("Something went wrong while submitting your request.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
