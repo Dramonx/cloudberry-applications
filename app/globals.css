@@ -17,7 +17,8 @@
         .particles { position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,.85) 1px, transparent 1.5px), radial-gradient(circle, rgba(251,191,36,.8) 1px, transparent 1.5px); background-size: 90px 90px, 140px 140px; animation: particles 14s linear infinite; opacity: .42; }
         .scanlines { pointer-events: none; position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.05) 50%, transparent 100%); background-size: 100% 6px; opacity: .18; mix-blend-mode: overlay; }
         .hero-shell, .content-shell { position: relative; z-index: 2; width: min(1220px, 100%); margin: 0 auto; }
-        .hero-shell { display: grid; grid-template-columns: 1fr 650px; gap: 34px; align-items: center; min-height: 78vh; }
+        .hero-shell { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 650px); gap: 34px; align-items: center; min-height: 78vh; }
+        .hero-left { min-width: 0; }
         .logo-stage { width: min(540px, 96%); margin-bottom: 18px; position: relative; animation: logoFloat 5s ease-in-out infinite; }
         .logo-stage:after { content: ""; position: absolute; inset: 10% 6% 0; background: rgba(251,146,60,.35); filter: blur(40px); z-index: -1; }
         .logo-stage img { width: 100%; display: block; filter: drop-shadow(0 26px 50px rgba(15,23,42,.38)); }
@@ -32,7 +33,7 @@
         .panel-glow { position: absolute; inset: -4px; border-radius: 18px; background: linear-gradient(135deg, #38bdf8, #ffffff, #fb923c); filter: blur(18px); opacity: .65; animation: glow 4s ease-in-out infinite; }
         .panel, .mode-card, .team-card { position: relative; border-radius: 16px; border: 3px solid rgba(255,255,255,.24); background: linear-gradient(180deg, rgba(12,32,55,.93), rgba(3,7,18,.94)); backdrop-filter: blur(24px); box-shadow: 0 32px 90px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.14), 0 10px 0 rgba(15,23,42,.42); overflow: hidden; }
         .panel { padding: 26px; }
-        .lobby-card { transform: translate(60px, -20px); position: relative; }
+        .lobby-card { position: relative; width: 100%; max-width: 650px; margin-left: auto; margin-top: -20px; }
         .lobby-placeholder { min-height: unset; border-radius: 12px; border: 2px dashed rgba(125,211,252,.34); display: grid; place-items: center; text-align: center; padding: 28px; background: linear-gradient(135deg, rgba(14,165,233,.22), rgba(251,146,60,.16)); overflow: hidden; }
         .placeholder-grid { position: absolute; inset: 0; opacity: .32; background-size: 36px 36px; background-image: linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px); animation: particles 10s linear infinite; }
         .lobby-placeholder h2, .lobby-placeholder p { position: relative; }
