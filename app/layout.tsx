@@ -2,8 +2,8 @@ import "./globals.css";
 import Header from "./components/Header";
 
 export const metadata = {
-  title: "CloudBerry Applications",
-  description: "CloudBerry Staff Applications"
+  title: "Welcome to CloudBerry",
+  description: "Gen-PVP, Survival, Events!"
 };
 
 export default function RootLayout({
