@@ -155,22 +155,31 @@ async function sendApplicationQuestions({
   decision: string;
   qaText: string;
 }) {
-  const qaChunks = chunkText(qaText, 3900);
+  const qaChunks = chunkText(qaText, 3500);
 
-  await sendDiscord(webhook, {
-    embeds: [
-      {
-        title: "Full Staff Application Questions",
-        color: 0xfacc15,
-        fields: [
-          { name: "Minecraft Username", value: truncate(username), inline: true },
-          { name: "Discord Username", value: truncate(discord), inline: true },
-          { name: "Decision", value: decision, inline: true },
-          { name: "Parts", value: String(qaChunks.length), inline: true },
-        ],
-      },
-    ],
-  });
+  for (let i = 0; i < qaChunks.length; i++) {
+    await sendDiscord(webhook, {
+      embeds: [
+        {
+          title:
+            qaChunks.length === 1
+              ? "Full Staff Application Questions"
+              : `Full Staff Application Questions ${i + 1}/${qaChunks.length}`,
+          color: 0xfacc15,
+          fields:
+            i === 0
+              ? [
+                  { name: "Minecraft Username", value: truncate(username), inline: true },
+                  { name: "Discord Username", value: truncate(discord), inline: true },
+                  { name: "Decision", value: decision, inline: true },
+                ]
+              : [],
+          description: qaChunks[i],
+        },
+      ],
+    });
+  }
+}
 
   for (let i = 0; i < qaChunks.length; i++) {
     await sendDiscord(webhook, {
