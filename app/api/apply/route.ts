@@ -173,13 +173,14 @@ async function sendApplicationQuestions({
                   { name: "Discord Username", value: truncate(discord), inline: true },
                   { name: "Decision", value: decision, inline: true },
                 ]
-              : [],
+              : undefined,
           description: qaChunks[i],
         },
       ],
     });
   }
 }
+
 
   for (let i = 0; i < qaChunks.length; i++) {
     await sendDiscord(webhook, {
