@@ -15,10 +15,9 @@ function truncate(text: string, max = 750) {
   return text.length > max ? text.slice(0, max - 3) + "..." : text;
 }
 
-function chunkText(text: string, maxLength = 1750) {
+function chunkText(text: string, maxLength = 1700) {
   const safeText = text || "N/A";
   const chunks: string[] = [];
-
   let remaining = safeText;
 
   while (remaining.length > maxLength) {
@@ -40,9 +39,7 @@ function chunkText(text: string, maxLength = 1750) {
     remaining = remaining.slice(splitAt).trim();
   }
 
-  if (remaining) {
-    chunks.push(remaining);
-  }
+  if (remaining) chunks.push(remaining);
 
   return chunks.length ? chunks : ["N/A"];
 }
@@ -51,6 +48,18 @@ function looksEnglishOnly(text: string) {
   const letters = text.match(/[A-Za-z]/g)?.length || 0;
   const nonEnglishLetters = text.match(/[^\x00-\x7F]/g)?.length || 0;
   return letters >= 20 && nonEnglishLetters === 0;
+}
+
+function listToText(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.map(String).join("\n") || "N/A";
+  }
+
+  if (typeof value === "string") {
+    return value || "N/A";
+  }
+
+  return "N/A";
 }
 
 async function redisCommand(command: unknown[]) {
@@ -111,17 +120,39 @@ async function sendDiscord(
   }
 }
 
-async function sendApplicationWebhook({
+async function sendApplicationSummary({
   webhook,
   title,
   color,
   fields,
-  qaText,
 }: {
   webhook: string | undefined;
   title: string;
   color: number;
   fields: { name: string; value: string; inline?: boolean }[];
+}) {
+  await sendDiscord(webhook, {
+    embeds: [
+      {
+        title,
+        color,
+        fields,
+      },
+    ],
+  });
+}
+
+async function sendApplicationQuestions({
+  webhook,
+  username,
+  discord,
+  decision,
+  qaText,
+}: {
+  webhook: string | undefined;
+  username: string;
+  discord: string;
+  decision: string;
   qaText: string;
 }) {
   const qaChunks = chunkText(qaText);
@@ -129,14 +160,13 @@ async function sendApplicationWebhook({
   await sendDiscord(webhook, {
     embeds: [
       {
-        title,
-        color,
+        title: "Full Staff Application Questions",
+        color: 0xfacc15,
         fields: [
-          ...fields,
-          {
-            name: "Full Application",
-            value: `Sent below in ${qaChunks.length} part${qaChunks.length === 1 ? "" : "s"}.`,
-          },
+          { name: "Minecraft Username", value: truncate(username), inline: true },
+          { name: "Discord Username", value: truncate(discord), inline: true },
+          { name: "Decision", value: decision, inline: true },
+          { name: "Parts", value: String(qaChunks.length), inline: true },
         ],
       },
     ],
@@ -147,6 +177,18 @@ async function sendApplicationWebhook({
       content: `**Questions & Answers ${i + 1}/${qaChunks.length}**\n${qaChunks[i]}`,
     });
   }
+}
+
+function getQuestionsWebhook(approved: boolean) {
+  if (approved) {
+    return process.env.DISCORD_QUESTIONS_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
+  }
+
+  return (
+    process.env.DISCORD_DECLINED_QUESTIONS_WEBHOOK_URL ||
+    process.env.DISCORD_QUESTIONS_WEBHOOK_URL ||
+    process.env.DISCORD_DECLINED_WEBHOOK_URL
+  );
 }
 
 export async function POST(req: Request) {
@@ -201,18 +243,27 @@ export async function POST(req: Request) {
         SEVEN_DAYS,
       ]);
 
-      await sendApplicationWebhook({
+      const fields = [
+        { name: "Minecraft Username", value: truncate(String(username)), inline: true },
+        { name: "Discord Username", value: truncate(String(discord)), inline: true },
+        { name: "Decision", value: "Declined", inline: true },
+        { name: "Score", value: "0%", inline: true },
+        { name: "Reason", value: "Application must be written in English." },
+      ];
+
+      await sendApplicationSummary({
         webhook: process.env.DISCORD_DECLINED_WEBHOOK_URL,
         title: "Declined Staff Application",
         color: 0xff5555,
+        fields,
+      });
+
+      await sendApplicationQuestions({
+        webhook: getQuestionsWebhook(false),
+        username: String(username),
+        discord: String(discord),
+        decision: "Declined",
         qaText,
-        fields: [
-          { name: "Minecraft Username", value: truncate(String(username)), inline: true },
-          { name: "Discord Username", value: truncate(String(discord)), inline: true },
-          { name: "Decision", value: "Declined", inline: true },
-          { name: "Score", value: "0%", inline: true },
-          { name: "Reason", value: "Application must be written in English." },
-        ],
       });
 
       return Response.json({
@@ -286,23 +337,31 @@ ${qaText}
     }
 
     const approved = result.decision === "approved";
+    const decisionText = approved ? "Approved for Review" : "Declined";
 
     const fields = [
       { name: "Minecraft Username", value: truncate(String(username)), inline: true },
       { name: "Discord Username", value: truncate(String(discord)), inline: true },
-      { name: "Decision", value: approved ? "Approved for Review" : "Declined", inline: true },
+      { name: "Decision", value: decisionText, inline: true },
       { name: "Score", value: `${result.score ?? 0}%`, inline: true },
-      { name: "Reason", value: truncate(result.reason || "N/A") },
-      { name: "Strengths", value: truncate((result.strengths || []).join("\n") || "N/A") },
-      { name: "Concerns", value: truncate((result.concerns || []).join("\n") || "N/A") },
+      { name: "Reason", value: truncate(String(result.reason || "N/A")) },
+      { name: "Strengths", value: truncate(listToText(result.strengths)) },
+      { name: "Concerns", value: truncate(listToText(result.concerns)) },
     ];
 
     if (approved) {
-      await sendApplicationWebhook({
+      await sendApplicationSummary({
         webhook: process.env.DISCORD_WEBHOOK_URL,
         title: "Potential Staff Candidate",
         color: 0x38bdf8,
         fields,
+      });
+
+      await sendApplicationQuestions({
+        webhook: getQuestionsWebhook(true),
+        username: String(username),
+        discord: String(discord),
+        decision: decisionText,
         qaText,
       });
 
@@ -325,11 +384,18 @@ ${qaText}
       SEVEN_DAYS,
     ]);
 
-    await sendApplicationWebhook({
+    await sendApplicationSummary({
       webhook: process.env.DISCORD_DECLINED_WEBHOOK_URL,
       title: "Declined Staff Application",
       color: 0xff5555,
       fields,
+    });
+
+    await sendApplicationQuestions({
+      webhook: getQuestionsWebhook(false),
+      username: String(username),
+      discord: String(discord),
+      decision: decisionText,
       qaText,
     });
 
