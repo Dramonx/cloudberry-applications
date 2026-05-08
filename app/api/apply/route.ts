@@ -181,21 +181,6 @@ async function sendApplicationQuestions({
   }
 }
 
-
-  for (let i = 0; i < qaChunks.length; i++) {
-    await sendDiscord(webhook, {
-      embeds: [
-        {
-          title: `Questions & Answers ${i + 1}/${qaChunks.length}`,
-          description: qaChunks[i],
-          color: 0xfacc15,
-        },
-      ],
-    });
-  }
-}
-
-
 function getQuestionsWebhook(approved: boolean) {
   if (approved) {
     return process.env.DISCORD_QUESTIONS_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
