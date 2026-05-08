@@ -2,7 +2,7 @@
 
 export default function HomePage() {
   return (
-    <main>
+    <main className="home-page">
       <div className="sky" />
       <div className="sun" />
       <div className="cloud cloud-1" />
