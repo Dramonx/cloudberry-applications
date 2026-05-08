@@ -155,7 +155,7 @@ async function sendApplicationQuestions({
   decision: string;
   qaText: string;
 }) {
-  const qaChunks = chunkText(qaText);
+  const qaChunks = chunkText(qaText, 3900);
 
   await sendDiscord(webhook, {
     embeds: [
@@ -174,10 +174,17 @@ async function sendApplicationQuestions({
 
   for (let i = 0; i < qaChunks.length; i++) {
     await sendDiscord(webhook, {
-      content: `**Questions & Answers ${i + 1}/${qaChunks.length}**\n${qaChunks[i]}`,
+      embeds: [
+        {
+          title: `Questions & Answers ${i + 1}/${qaChunks.length}`,
+          description: qaChunks[i],
+          color: 0xfacc15,
+        },
+      ],
     });
   }
 }
+
 
 function getQuestionsWebhook(approved: boolean) {
   if (approved) {
