@@ -15,6 +15,38 @@ function truncate(text: string, max = 750) {
   return text.length > max ? text.slice(0, max - 3) + "..." : text;
 }
 
+function chunkText(text: string, maxLength = 1750) {
+  const safeText = text || "N/A";
+  const chunks: string[] = [];
+
+  let remaining = safeText;
+
+  while (remaining.length > maxLength) {
+    let splitAt = remaining.lastIndexOf("\n\n", maxLength);
+
+    if (splitAt < maxLength * 0.5) {
+      splitAt = remaining.lastIndexOf("\n", maxLength);
+    }
+
+    if (splitAt < maxLength * 0.5) {
+      splitAt = remaining.lastIndexOf(" ", maxLength);
+    }
+
+    if (splitAt < maxLength * 0.5) {
+      splitAt = maxLength;
+    }
+
+    chunks.push(remaining.slice(0, splitAt).trim());
+    remaining = remaining.slice(splitAt).trim();
+  }
+
+  if (remaining) {
+    chunks.push(remaining);
+  }
+
+  return chunks.length ? chunks : ["N/A"];
+}
+
 function looksEnglishOnly(text: string) {
   const letters = text.match(/[A-Za-z]/g)?.length || 0;
   const nonEnglishLetters = text.match(/[^\x00-\x7F]/g)?.length || 0;
@@ -38,24 +70,82 @@ async function redisCommand(command: unknown[]) {
   return res.json();
 }
 
-async function sendDiscord(webhook: string | undefined, payload: unknown) {
+async function sendDiscord(
+  webhook: string | undefined,
+  payload: Record<string, unknown>,
+  attempt = 0
+) {
   if (!webhook) {
-    console.log("❌ No webhook provided");
+    console.log("No webhook provided");
     return;
   }
 
   const res = await fetch(webhook, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      allowed_mentions: { parse: [] },
+      ...payload,
+    }),
   });
 
   const text = await res.text();
 
+  if (res.status === 429 && attempt < 3) {
+    try {
+      const data = JSON.parse(text);
+      const retryAfter = Math.ceil((data.retry_after || 1) * 1000);
+
+      await new Promise((resolve) => setTimeout(resolve, retryAfter));
+      return sendDiscord(webhook, payload, attempt + 1);
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      return sendDiscord(webhook, payload, attempt + 1);
+    }
+  }
+
   if (!res.ok) {
-    console.error("❌ Discord webhook failed:", res.status, text);
+    console.error("Discord webhook failed:", res.status, text);
   } else {
-    console.log("✅ Discord webhook sent");
+    console.log("Discord webhook sent");
+  }
+}
+
+async function sendApplicationWebhook({
+  webhook,
+  title,
+  color,
+  fields,
+  qaText,
+}: {
+  webhook: string | undefined;
+  title: string;
+  color: number;
+  fields: { name: string; value: string; inline?: boolean }[];
+  qaText: string;
+}) {
+  const qaChunks = chunkText(qaText);
+
+  await sendDiscord(webhook, {
+    embeds: [
+      {
+        title,
+        color,
+        fields: [
+          ...fields,
+          {
+            name: "Full Application",
+            value: `Sent below in ${qaChunks.length} part${qaChunks.length === 1 ? "" : "s"}.`,
+          },
+        ],
+      },
+    ],
+  });
+
+  for (let i = 0; i < qaChunks.length; i++) {
+    await sendDiscord(webhook, {
+      content: `**Questions & Answers ${i + 1}/${qaChunks.length}**\n${qaChunks[i]}`,
+    });
   }
 }
 
@@ -64,14 +154,21 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { username, discord, questions, answers } = body;
 
-    if (!username || !discord || !questions || !answers) {
+    if (
+      !username ||
+      !discord ||
+      !questions ||
+      !answers ||
+      !Array.isArray(questions) ||
+      !Array.isArray(answers)
+    ) {
       return Response.json(
         { decision: "declined", message: "Application declined... please try again in 7 days." },
         { status: 400 }
       );
     }
 
-    const discordKey = normalizeDiscord(discord);
+    const discordKey = normalizeDiscord(String(discord));
     const lockKey = `cloudberry:staffapp:declined:${discordKey}`;
 
     const existingLock = await redisCommand(["GET", lockKey]);
@@ -85,7 +182,9 @@ export async function POST(req: Request) {
     }
 
     const qaText = questions
-      .map((q: string, i: number) => `Q${i + 1}: ${q}\nA: ${answers[i] || "No answer"}`)
+      .map((q: string, i: number) => {
+        return `Q${i + 1}: ${q}\nA: ${answers[i] || "No answer"}`;
+      })
       .join("\n\n");
 
     if (!looksEnglishOnly(qaText)) {
@@ -102,20 +201,17 @@ export async function POST(req: Request) {
         SEVEN_DAYS,
       ]);
 
-      await sendDiscord(process.env.DISCORD_DECLINED_WEBHOOK_URL, {
-        embeds: [
-          {
-            title: "❌ Declined Staff Application",
-            color: 0xff5555,
-            fields: [
-              { name: "Minecraft Username", value: truncate(username), inline: true },
-              { name: "Discord Username", value: truncate(discord), inline: true },
-              { name: "Decision", value: "Declined", inline: true },
-              { name: "Score", value: "0%", inline: true },
-              { name: "Reason", value: "Application must be written in English." },
-              { name: "Questions & Answers", value: truncate(qaText) },
-            ],
-          },
+      await sendApplicationWebhook({
+        webhook: process.env.DISCORD_DECLINED_WEBHOOK_URL,
+        title: "Declined Staff Application",
+        color: 0xff5555,
+        qaText,
+        fields: [
+          { name: "Minecraft Username", value: truncate(String(username)), inline: true },
+          { name: "Discord Username", value: truncate(String(discord)), inline: true },
+          { name: "Decision", value: "Declined", inline: true },
+          { name: "Score", value: "0%", inline: true },
+          { name: "Reason", value: "Application must be written in English." },
         ],
       });
 
@@ -192,25 +288,22 @@ ${qaText}
     const approved = result.decision === "approved";
 
     const fields = [
-      { name: "Minecraft Username", value: truncate(username), inline: true },
-      { name: "Discord Username", value: truncate(discord), inline: true },
+      { name: "Minecraft Username", value: truncate(String(username)), inline: true },
+      { name: "Discord Username", value: truncate(String(discord)), inline: true },
       { name: "Decision", value: approved ? "Approved for Review" : "Declined", inline: true },
       { name: "Score", value: `${result.score ?? 0}%`, inline: true },
-      { name: "Reason", value: truncate(result.reason) },
+      { name: "Reason", value: truncate(result.reason || "N/A") },
       { name: "Strengths", value: truncate((result.strengths || []).join("\n") || "N/A") },
       { name: "Concerns", value: truncate((result.concerns || []).join("\n") || "N/A") },
-      { name: "Questions & Answers", value: truncate(qaText) },
     ];
 
     if (approved) {
-      await sendDiscord(process.env.DISCORD_WEBHOOK_URL, {
-        embeds: [
-          {
-            title: "✅ Potential Staff Candidate",
-            color: 0x38bdf8,
-            fields,
-          },
-        ],
+      await sendApplicationWebhook({
+        webhook: process.env.DISCORD_WEBHOOK_URL,
+        title: "Potential Staff Candidate",
+        color: 0x38bdf8,
+        fields,
+        qaText,
       });
 
       return Response.json({
@@ -232,14 +325,12 @@ ${qaText}
       SEVEN_DAYS,
     ]);
 
-    await sendDiscord(process.env.DISCORD_DECLINED_WEBHOOK_URL, {
-      embeds: [
-        {
-          title: "❌ Declined Staff Application",
-          color: 0xff5555,
-          fields,
-        },
-      ],
+    await sendApplicationWebhook({
+      webhook: process.env.DISCORD_DECLINED_WEBHOOK_URL,
+      title: "Declined Staff Application",
+      color: 0xff5555,
+      fields,
+      qaText,
     });
 
     return Response.json({
