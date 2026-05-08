@@ -51,7 +51,7 @@ main {
 
 .hero-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(380px, 650px);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 600px);
   gap: 34px;
   align-items: center;
   min-height: 78vh;
@@ -76,7 +76,6 @@ h1 span { color: #fbbf24; text-shadow: 0 6px 0 rgba(124,45,18,.45), 0 0 34px rgb
 .hero-buttons { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 26px; }
 .hero-buttons button,
 .hero-buttons a { border: 0; border-radius: 8px; padding: 16px 18px; color: #082f49; font-size: 15px; font-weight: 1000; text-decoration: none; background: linear-gradient(135deg, #7dd3fc, #fde68a, #fb923c); box-shadow: 0 8px 0 rgba(124,45,18,.5), 0 18px 40px rgba(251,146,60,.22); cursor: pointer; transition: .2s ease; }
-
 .hero-buttons button:hover,
 .hero-buttons a:hover { transform: translateY(-2px); filter: brightness(1.08); }
 
@@ -91,19 +90,30 @@ h1 span { color: #fbbf24; text-shadow: 0 6px 0 rgba(124,45,18,.45), 0 0 34px rgb
 .lobby-card {
   position: relative;
   width: 100%;
-  max-width: 650px;
+  max-width: 600px;
   margin-left: auto;
+  margin-top: -20px;
 }
 
 .lobby-placeholder { min-height: unset; border-radius: 12px; border: 2px dashed rgba(125,211,252,.34); display: grid; place-items: center; text-align: center; padding: 28px; background: linear-gradient(135deg, rgba(14,165,233,.22), rgba(251,146,60,.16)); overflow: hidden; }
 .placeholder-grid { position: absolute; inset: 0; opacity: .32; background-size: 36px 36px; background-image: linear-gradient(rgba(255,255,255,.16) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.16) 1px, transparent 1px); animation: particles 10s linear infinite; }
-.lobby-placeholder h2, .lobby-placeholder p { position: relative; }
-.lobby-placeholder h2 { font-size: 30px; margin: 0 0 8px; }
-.lobby-placeholder p { color: #cbd5e1; margin: 0; }
-.lobby-placeholder img { width: 100%; height: 375px; object-fit: cover; border-radius: 16px; transition: transform 0.3s ease; }
+
+.lobby-placeholder img {
+  width: 100%;
+  height: 340px;
+  object-fit: cover;
+  border-radius: 16px;
+  transition: transform 0.3s ease;
+}
+
 .lobby-placeholder img:hover { transform: scale(1.03); }
 
-.content-shell { display: grid; gap: 24px; padding-bottom: 80px; }
+.content-shell {
+  display: grid;
+  gap: 24px;
+  padding-bottom: 80px;
+}
+
 .about-panel { padding: 30px; }
 
 .eyebrow { margin: 0 0 10px; color: #7dd3fc; font-size: 11px; font-weight: 1000; letter-spacing: .18em; }
@@ -111,14 +121,26 @@ h2 { margin: 0 0 12px; font-size: 34px; letter-spacing: -.05em; }
 p { line-height: 1.7; }
 .about-panel p, .mode-card p, .team-card p { color: #dbeafe; font-size: 17px; }
 
-.gamemodes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.gamemodes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
 .mode-card { padding: 24px; transition: .2s ease; }
 .mode-card:hover { transform: translateY(-5px); box-shadow: 0 0 34px rgba(125,211,252,.34), 0 32px 90px rgba(0,0,0,.45); }
 .mode-chip { display: inline-flex; margin-bottom: 14px; padding: 7px 10px; border-radius: 4px; color: #082f49; background: #7dd3fc; font-size: 11px; font-weight: 1000; letter-spacing: .1em; }
 .coming .mode-chip { background: #fbbf24; }
 h3 { margin: 0; font-size: 30px; }
 
-.team-card { display: grid; grid-template-columns: 220px 1fr; gap: 26px; padding: 28px; align-items: center; }
+.team-card {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 26px;
+  padding: 28px;
+  align-items: center;
+}
+
 .avatar-wrap { min-height: 270px; display: grid; place-items: end center; border-radius: 12px; background: radial-gradient(circle at 50% 20%, rgba(125,211,252,.35), transparent 60%); border: 2px solid rgba(255,255,255,.14); overflow: hidden; }
 .avatar-wrap img { height: 265px; image-rendering: pixelated; filter: drop-shadow(0 20px 24px rgba(0,0,0,.38)); }
 
@@ -155,6 +177,10 @@ h3 { margin: 0; font-size: 30px; }
   .lobby-card {
     max-width: 100%;
     margin: 0 auto;
+  }
+
+  .lobby-placeholder img {
+    height: 300px;
   }
 }
 
