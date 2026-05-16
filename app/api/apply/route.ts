@@ -44,12 +44,6 @@ function chunkText(text: string, maxLength = 1700) {
   return chunks.length ? chunks : ["N/A"];
 }
 
-function looksEnglishOnly(text: string) {
-  const letters = text.match(/[A-Za-z]/g)?.length || 0;
-  const nonEnglishLetters = text.match(/[^\x00-\x7F]/g)?.length || 0;
-  return letters >= 20 && nonEnglishLetters === 0;
-}
-
 function listToText(value: unknown) {
   if (Array.isArray(value)) {
     return value.map(String).join("\n") || "N/A";
@@ -230,21 +224,7 @@ export async function POST(req: Request) {
         return `Q${i + 1}: ${q}\nA: ${answers[i] || "No answer"}`;
       })
       .join("\n\n");
-
-    if (!looksEnglishOnly(qaText)) {
-      await redisCommand([
-        "SET",
-        lockKey,
-        JSON.stringify({
-          discord,
-          username,
-          declinedAt: new Date().toISOString(),
-          reason: "Application must be written in English.",
-        }),
-        "EX",
-        SEVEN_DAYS,
-      ]);
-
+    
       const fields = [
         { name: "Minecraft Username", value: truncate(String(username)), inline: true },
         { name: "Discord Username", value: truncate(String(discord)), inline: true },
