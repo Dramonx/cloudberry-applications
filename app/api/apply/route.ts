@@ -22,7 +22,6 @@ function chunkText(text: string, maxLength = 1700) {
 
   while (remaining.length > maxLength) {
     let splitAt = remaining.lastIndexOf("\n\n", maxLength);
-
     if (splitAt < maxLength * 0.5) splitAt = remaining.lastIndexOf("\n", maxLength);
     if (splitAt < maxLength * 0.5) splitAt = remaining.lastIndexOf(" ", maxLength);
     if (splitAt < maxLength * 0.5) splitAt = maxLength;
@@ -32,7 +31,6 @@ function chunkText(text: string, maxLength = 1700) {
   }
 
   if (remaining) chunks.push(remaining);
-
   return chunks.length ? chunks : ["N/A"];
 }
 
@@ -42,21 +40,36 @@ function listToText(value: unknown) {
   return "N/A";
 }
 
+function manualReviewResult(reason: string) {
+  return {
+    decision: "approved",
+    score: 50,
+    reason,
+    concerns: ["Needs manual moderator review"],
+    strengths: ["Application was not automatically declined"],
+  };
+}
+
 async function redisCommand(command: unknown[]) {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
     return null;
   }
 
-  const res = await fetch(process.env.UPSTASH_REDIS_REST_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(command),
-  });
+  try {
+    const res = await fetch(process.env.UPSTASH_REDIS_REST_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(command),
+    });
 
-  return res.json();
+    return res.json();
+  } catch (error) {
+    console.error("Redis command failed:", error);
+    return null;
+  }
 }
 
 async function sendDiscord(
@@ -69,33 +82,35 @@ async function sendDiscord(
     return;
   }
 
-  const res = await fetch(webhook, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      allowed_mentions: { parse: [] },
-      ...payload,
-    }),
-  });
+  try {
+    const res = await fetch(webhook, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        allowed_mentions: { parse: [] },
+        ...payload,
+      }),
+    });
 
-  const text = await res.text();
+    const text = await res.text();
 
-  if (res.status === 429 && attempt < 3) {
-    try {
-      const data = JSON.parse(text);
-      const retryAfter = Math.ceil((data.retry_after || 1) * 1000);
-      await new Promise((resolve) => setTimeout(resolve, retryAfter));
-      return sendDiscord(webhook, payload, attempt + 1);
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return sendDiscord(webhook, payload, attempt + 1);
+    if (res.status === 429 && attempt < 3) {
+      try {
+        const data = JSON.parse(text);
+        const retryAfter = Math.ceil((data.retry_after || 1) * 1000);
+        await new Promise((resolve) => setTimeout(resolve, retryAfter));
+        return sendDiscord(webhook, payload, attempt + 1);
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        return sendDiscord(webhook, payload, attempt + 1);
+      }
     }
-  }
 
-  if (!res.ok) {
-    console.error("Discord webhook failed:", res.status, text);
-  } else {
-    console.log("Discord webhook sent");
+    if (!res.ok) {
+      console.error("Discord webhook failed:", res.status, text);
+    }
+  } catch (error) {
+    console.error("Discord webhook error:", error);
   }
 }
 
@@ -111,13 +126,7 @@ async function sendApplicationSummary({
   fields: { name: string; value: string; inline?: boolean }[];
 }) {
   await sendDiscord(webhook, {
-    embeds: [
-      {
-        title,
-        color,
-        fields,
-      },
-    ],
+    embeds: [{ title, color, fields }],
   });
 }
 
@@ -186,7 +195,7 @@ export async function POST(req: Request) {
       !Array.isArray(answers)
     ) {
       return Response.json(
-        { decision: "declined", message: "Application declined... please try again in 7 days." },
+        { decision: "declined", message: "Application declined... please fill out the full form." },
         { status: 400 }
       );
     }
@@ -210,9 +219,44 @@ export async function POST(req: Request) {
       })
       .join("\n\n");
 
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: `
+    let result;
+
+    try {
+      const response = await openai.responses.create({
+        model: "gpt-4.1-mini",
+        text: {
+          format: {
+            type: "json_schema",
+            name: "staff_application_screening",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                decision: {
+                  type: "string",
+                  enum: ["approved", "declined"],
+                },
+                score: {
+                  type: "number",
+                },
+                reason: {
+                  type: "string",
+                },
+                concerns: {
+                  type: "array",
+                  items: { type: "string" },
+                },
+                strengths: {
+                  type: "array",
+                  items: { type: "string" },
+                },
+              },
+              required: ["decision", "score", "reason", "concerns", "strengths"],
+            },
+          },
+        },
+        input: `
 You are CloudBerry AI, a Minecraft server staff application screener.
 
 Tone:
@@ -226,6 +270,7 @@ IMPORTANT:
 Do not be overly harsh.
 A normal, decent, mature applicant should be approved for moderator review.
 Only decline if there are clear red flags.
+If you are unsure, approve for moderator review.
 
 Approve if:
 - They show basic maturity.
@@ -242,15 +287,6 @@ Decline only if:
 - They say they would ignore rules for friends.
 - They show very poor judgment.
 
-Return JSON only:
-{
-  "decision": "approved" or "declined",
-  "score": 0-100,
-  "reason": "short reason",
-  "concerns": ["concern 1", "concern 2"],
-  "strengths": ["strength 1", "strength 2"]
-}
-
 Applicant:
 Minecraft: ${username}
 Discord: ${discord}
@@ -258,20 +294,18 @@ Discord: ${discord}
 Application:
 ${qaText}
 `,
-    });
+      });
 
-    let result;
-
-    try {
       result = JSON.parse(response.output_text);
-    } catch {
-      result = {
-        decision: "declined",
-        score: 0,
-        reason: "AI could not process the application safely.",
-        concerns: ["Invalid AI response"],
-        strengths: [],
-      };
+    } catch (error) {
+      console.error("AI processing failed:", error);
+      result = manualReviewResult(
+        "AI could not process the application reliably. Sent to moderators for manual review."
+      );
+    }
+
+    if (result.decision !== "approved" && result.decision !== "declined") {
+      result = manualReviewResult("AI returned an unclear decision. Sent to moderators for manual review.");
     }
 
     const approved = result.decision === "approved";
@@ -281,7 +315,7 @@ ${qaText}
       { name: "Minecraft Username", value: truncate(String(username)), inline: true },
       { name: "Discord Username", value: truncate(String(discord)), inline: true },
       { name: "Decision", value: decisionText, inline: true },
-      { name: "Score", value: `${result.score ?? 0}%`, inline: true },
+      { name: "Score", value: `${Math.max(0, Math.min(100, Number(result.score) || 0))}%`, inline: true },
       { name: "Reason", value: truncate(String(result.reason || "N/A")) },
       { name: "Strengths", value: truncate(listToText(result.strengths)) },
       { name: "Concerns", value: truncate(listToText(result.concerns)) },
@@ -347,10 +381,11 @@ ${qaText}
 
     return Response.json(
       {
-        decision: "declined",
-        message: "Application system error. Please try again later.",
+        decision: "approved",
+        message:
+          "Application received, but the system had trouble processing it. Please contact staff for manual review.",
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }
