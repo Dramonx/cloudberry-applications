@@ -23,17 +23,9 @@ function chunkText(text: string, maxLength = 1700) {
   while (remaining.length > maxLength) {
     let splitAt = remaining.lastIndexOf("\n\n", maxLength);
 
-    if (splitAt < maxLength * 0.5) {
-      splitAt = remaining.lastIndexOf("\n", maxLength);
-    }
-
-    if (splitAt < maxLength * 0.5) {
-      splitAt = remaining.lastIndexOf(" ", maxLength);
-    }
-
-    if (splitAt < maxLength * 0.5) {
-      splitAt = maxLength;
-    }
+    if (splitAt < maxLength * 0.5) splitAt = remaining.lastIndexOf("\n", maxLength);
+    if (splitAt < maxLength * 0.5) splitAt = remaining.lastIndexOf(" ", maxLength);
+    if (splitAt < maxLength * 0.5) splitAt = maxLength;
 
     chunks.push(remaining.slice(0, splitAt).trim());
     remaining = remaining.slice(splitAt).trim();
@@ -45,14 +37,8 @@ function chunkText(text: string, maxLength = 1700) {
 }
 
 function listToText(value: unknown) {
-  if (Array.isArray(value)) {
-    return value.map(String).join("\n") || "N/A";
-  }
-
-  if (typeof value === "string") {
-    return value || "N/A";
-  }
-
+  if (Array.isArray(value)) return value.map(String).join("\n") || "N/A";
+  if (typeof value === "string") return value || "N/A";
   return "N/A";
 }
 
@@ -98,7 +84,6 @@ async function sendDiscord(
     try {
       const data = JSON.parse(text);
       const retryAfter = Math.ceil((data.retry_after || 1) * 1000);
-
       await new Promise((resolve) => setTimeout(resolve, retryAfter));
       return sendDiscord(webhook, payload, attempt + 1);
     } catch {
@@ -224,35 +209,6 @@ export async function POST(req: Request) {
         return `Q${i + 1}: ${q}\nA: ${answers[i] || "No answer"}`;
       })
       .join("\n\n");
-    
-      const fields = [
-        { name: "Minecraft Username", value: truncate(String(username)), inline: true },
-        { name: "Discord Username", value: truncate(String(discord)), inline: true },
-        { name: "Decision", value: "Declined", inline: true },
-        { name: "Score", value: "0%", inline: true },
-        { name: "Reason", value: "Application must be written in English." },
-      ];
-
-      await sendApplicationSummary({
-        webhook: process.env.DISCORD_DECLINED_WEBHOOK_URL,
-        title: "Declined Staff Application",
-        color: 0xff5555,
-        fields,
-      });
-
-      await sendApplicationQuestions({
-        webhook: getQuestionsWebhook(false),
-        username: String(username),
-        discord: String(discord),
-        decision: "Declined",
-        qaText,
-      });
-
-      return Response.json({
-        decision: "declined",
-        message: "Application declined... please try again in 7 days.",
-      });
-    }
 
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
@@ -349,7 +305,8 @@ ${qaText}
 
       return Response.json({
         decision: "approved",
-        message: "Application Approved... Your application has been sent over to moderators for further review.",
+        message:
+          "Application Approved... Your application has been sent over to moderators for further review.",
       });
     }
 
