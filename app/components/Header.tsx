@@ -2,25 +2,35 @@
 
 import { useEffect, useState } from "react";
 
+type StatusResponse = {
+  online?: boolean;
+  players?: number;
+  max?: number;
+  discord?: number;
+};
+
 export default function Header() {
   const [players, setPlayers] = useState("...");
   const [max, setMax] = useState("...");
   const [discordCount, setDiscordCount] = useState("...");
+  const [isOnline, setIsOnline] = useState(false);
   const serverIp = "mc-cloudberry.net";
 
   useEffect(() => {
     const load = () => {
       fetch("/api/status")
         .then((res) => res.json())
-        .then((data) => {
-          setPlayers(data.players ?? "0");
-          setMax(data.max ?? "0");
-          setDiscordCount(data.discord ?? "0");
+        .then((data: StatusResponse) => {
+          setPlayers(String(data.players ?? 0));
+          setMax(String(data.max ?? 0));
+          setDiscordCount(String(data.discord ?? 0));
+          setIsOnline(Boolean(data.online));
         })
         .catch(() => {
           setPlayers("0");
           setMax("0");
           setDiscordCount("0");
+          setIsOnline(false);
         });
     };
 
@@ -34,12 +44,10 @@ export default function Header() {
     alert("Copied server IP!");
   }
 
-  const isOnline = Number(players) > 0;
-
   return (
     <header className="cb-header">
       <div className="cb-left">
-        <a className="cb-brand" href="/">☁️ CloudBerry</a>
+        <a className="cb-brand" href="/">{"\u2601\ufe0f"} CloudBerry</a>
         <a className="cb-link" href="/">Home</a>
         <a className="cb-link" href="/apply">Staff Applications</a>
         <a className="cb-link" href="https://shop.mc-cloudberry.com" target="_blank" rel="noopener noreferrer">
@@ -52,7 +60,7 @@ export default function Header() {
 
       <div className="cb-right">
         <button className="cb-pill" onClick={copyIp}>
-          🌐 {serverIp}{" "}
+          {"\ud83c\udf10"} {serverIp}{" "}
           <span>
             <span className={isOnline ? "status-dot online" : "status-dot offline"} />
             ({players}/{max} online)
@@ -60,7 +68,7 @@ export default function Header() {
         </button>
 
         <a className="cb-pill" href="https://discord.gg/cloudberry" target="_blank" rel="noopener noreferrer">
-          💬 Discord <span>({discordCount})</span>
+          {"\ud83d\udcac"} Discord <span>({discordCount})</span>
         </a>
       </div>
 
