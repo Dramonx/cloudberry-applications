@@ -126,7 +126,7 @@ export default function HomePage() {
           <p className="eyebrow">STAFF TEAM</p>
           <h2>Assistant Manager: Zxenith</h2>
           <p>
-            Hi, I’m an Zxenith at Cloud Berry. I focus on helping both players and staff, 
+            Hi, I’m Zxenith at Cloud Berry. I focus on helping both players and staff, 
             keeping things organized, and making sure the server stays enjoyable for everyone. 
             I take my role seriously but also love connecting with the community—so don’t be shy to say hi!
           </p>
