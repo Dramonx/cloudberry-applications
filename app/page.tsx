@@ -102,23 +102,6 @@ export default function HomePage() {
 
       <div className="team-card">
         <div className="avatar-wrap">
-          <img src="https://mc-heads.net/body/Zxenist" alt="Zxenist Minecraft avatar" />
-        </div>
-      
-        <div>
-          <p className="eyebrow">STAFF TEAM</p>
-          <h2>Manager: Zxenist <span style={{ color: "#7dd3fc" }}>(Snow)</span></h2>
-          <p>
-            I’m Zxenist, a dedicated Manager at CloudBerry focused on keeping operations
-            running smoothly, supporting the team, and creating a positive community
-            experience. I work to solve problems efficiently, improve performance, and
-            ensure users receive high-quality service.
-          </p>
-        </div>
-      </div>
-
-      <div className="team-card">
-        <div className="avatar-wrap">
           <img src="https://mc-heads.net/body/Zxenith_" alt="Zxenith_ Minecraft avatar" />
         </div>
       
@@ -129,6 +112,22 @@ export default function HomePage() {
             Hi, I’m Zxenith at Cloud Berry. I focus on helping both players and staff, 
             keeping things organized, and making sure the server stays enjoyable for everyone. 
             I take my role seriously but also love connecting with the community—so don’t be shy to say hi!
+          </p>
+        </div>
+      </div>
+
+      <div className="team-card">
+        <div className="avatar-wrap">
+          <img src="https://mc-heads.net/body/_fearness_" alt="_fearness_ Minecraft avatar" />
+        </div>
+      
+        <div>
+          <p className="eyebrow">STAFF TEAM</p>
+          <h2>Media Manager: Fearness aka Fear</h2>
+          <p>
+            I'm Fear, a passionate Media Manager at CloudBerry dedicated to creating peak content, cinematic edits.
+            My goal is to bring CloudBerry's story to life, engage the community, and deliver content that stands out and leaves a lasting impression. 
+            "The true Fear. Behind every peak edit, there's a story worth telling."
           </p>
         </div>
       </div>
