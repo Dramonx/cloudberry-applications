@@ -102,16 +102,14 @@ export default function HomePage() {
 
       <div className="team-card">
         <div className="avatar-wrap">
-          <img src="https://mc-heads.net/body/Zxenith_" alt="Zxenith_ Minecraft avatar" />
+          <img src="https://mc-heads.net/body/Mwyen" alt="Mwyen Minecraft avatar" />
         </div>
       
         <div>
           <p className="eyebrow">STAFF TEAM</p>
-          <h2>Assistant Manager: Zxenith</h2>
+          <h2>Assistant Manager: Mwyen</h2>
           <p>
-            Hi, I’m Zxenith at Cloud Berry. I focus on helping both players and staff, 
-            keeping things organized, and making sure the server stays enjoyable for everyone. 
-            I take my role seriously but also love connecting with the community—so don’t be shy to say hi!
+            My goal is to reach the berry above the clouds. 
           </p>
         </div>
       </div>
