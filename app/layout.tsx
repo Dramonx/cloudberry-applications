@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./home-spacing.css";
 import Header from "./components/Header";
 
 export const metadata = {
