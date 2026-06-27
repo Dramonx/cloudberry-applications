@@ -8,10 +8,9 @@ export const metadata = {
   description: "Gen-PVP, Survival, Events!",
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
       { url: "/CloudBerry.png", sizes: "1254x1254", type: "image/png" },
     ],
-    shortcut: "/favicon.svg",
+    shortcut: "/CloudBerry.png",
     apple: "/CloudBerry.png",
   },
 };
