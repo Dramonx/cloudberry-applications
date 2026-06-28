@@ -107,7 +107,7 @@ export default function HomePage() {
       
         <div>
           <p className="eyebrow">STAFF TEAM</p>
-          <h2>Assistant Manager: Mwyen</h2>
+          <h2>Manager: Mwyen</h2>
           <p>
             My goal is to reach the berry above the clouds. 
           </p>
