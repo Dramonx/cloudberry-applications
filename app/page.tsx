@@ -102,7 +102,7 @@ export default function HomePage() {
 
       <div className="team-card">
         <div className="avatar-wrap">
-          <img src="https://mc-heads.net/body/Mwyen" alt="Mwyen Minecraft avatar" />
+          <img src="https://mc-heads.net/body/mwyen" alt="Mwyen Minecraft avatar" />
         </div>
       
         <div>
